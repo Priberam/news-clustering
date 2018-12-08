@@ -9,70 +9,123 @@
 import math
 import model
 import pdb
+import datetime
+
 
 def sparse_dotprod(fv0, fv1):
-  dotprod = 0
+    dotprod = 0
 
-  for f_id_0, f_value_0 in fv0.items():
-    if f_id_0 in fv1:
-      f_value_1 = fv1[f_id_0]
-      dotprod += f_value_0 * f_value_1
+    for f_id_0, f_value_0 in fv0.items():
+        if f_id_0 in fv1:
+            f_value_1 = fv1[f_id_0]
+            dotprod += f_value_0 * f_value_1
 
-  return dotprod
+    return dotprod
+
 
 def cosine_bof(d0, d1):
-  cosine_bof_v = {}
-  for fn, fv0 in d0.items():
-    if fn in d1:
-      fv1 = d1[fn]
-      cosine_bof_v[fn] = sparse_dotprod(fv0, fv1) / math.sqrt(sparse_dotprod(fv0, fv0) * sparse_dotprod(fv1, fv1))
-  return cosine_bof_v
+    cosine_bof_v = {}
+    for fn, fv0 in d0.items():
+        if fn in d1:
+            fv1 = d1[fn]
+            cosine_bof_v[fn] = sparse_dotprod(
+                fv0, fv1) / math.sqrt(sparse_dotprod(fv0, fv0) * sparse_dotprod(fv1, fv1))
+    return cosine_bof_v
 
-def cosine_sim(d0, d1, model: model.Model):
-  bof = cosine_bof(d0, d1)
-  return sparse_dotprod(bof, model.weights) - model.bias
+def normalized_gaussian(mean, stddev, x):
+  return (math.exp(-((x - mean) * (x - mean)) / (2 * stddev * stddev)))
+
+
+def timestamp_feature(tsi, tst, gstddev):
+  return normalized_gaussian(0, gstddev, (tsi-tst)/(60*60*24.0))
+
+
+def cosine_sim_dc(d0, c1, model: model.Model):
+    numdays_stddev = 3.0
+    bof = cosine_bof(d0.reprs, c1.reprs)
+    bof["NEWEST_TS"] = timestamp_feature(
+        d0.timestamp.timestamp(), c1.newest_timestamp.timestamp(), numdays_stddev)
+    bof["OLDEST_TS"] = timestamp_feature(
+        d0.timestamp.timestamp(), c1.oldest_timestamp.timestamp(), numdays_stddev)
+    bof["NEWEST_TS"] = timestamp_feature(
+        d0.timestamp.timestamp(), c1.get_relevance_stamp(), numdays_stddev)
+    return sparse_dotprod(bof, model.weights) - model.bias
+
 
 class Document:
-  def __init__(self, reprs, group_id):
-    self.reprs = reprs
-    self.group_id = group_id
+    def __init__(self, archive_document, group_id):
+        self.id = archive_document["id"]
+        self.reprs = archive_document["features"]
+        self.timestamp = datetime.datetime.strptime(
+            archive_document["date"], "%Y-%m-%d %H:%M:%S")
+        self.group_id = group_id
+
 
 class Cluster:
-  def __init__(self, reprs):
-    self.reprs = reprs
-    self.num_docs = 1
+    def __init__(self, document):
+        self.ids = set()
+        self.num_docs = 0
+        self.reprs = {}
+        self.sum_timestamp = 0
+        self.sumsq_timestamp = 0
+        self.newest_timestamp = datetime.datetime.strptime(
+            "1000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+        self.oldest_timestamp = datetime.datetime.strptime(
+            "3000-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+        self.add_document(document)
 
-  def add_bof(self, reprs0):
-    for fn, fv0 in reprs0.items():
-      if fn in self.reprs:
-        for f_id_0, f_value_0 in fv0.items():
-          if f_id_0 in self.reprs[fn]:
-            self.reprs[fn][f_id_0] += f_value_0
-          else:
-            self.reprs[fn][f_id_0] = f_value_0
-    self.num_docs += 1
+    def get_relevance_stamp(self):
+        z_score = 0
+        mean = self.sum_timestamp / self.num_docs
+        try:
+          std_dev = math.sqrt((self.sumsq_timestamp / self.num_docs) - (mean*mean))
+        except:
+          std_dev = 0.0
+        return mean + ((z_score * std_dev) * 3600.0) # its in secods since epoch
+
+    def add_document(self, document):
+        self.ids.add(document.id)
+        self.newest_timestamp = max(self.newest_timestamp, document.timestamp)
+        self.oldest_timestamp = min(self.oldest_timestamp, document.timestamp)
+        ts_hours =  (document.timestamp.timestamp() / 3600.0)
+        self.sum_timestamp += ts_hours
+        self.sumsq_timestamp += ts_hours * ts_hours
+        self.__add_bof(document.reprs)
+
+    def __add_bof(self, reprs0):
+        for fn, fv0 in reprs0.items():
+            if fn in self.reprs:
+                for f_id_0, f_value_0 in fv0.items():
+                    if f_id_0 in self.reprs[fn]:
+                        self.reprs[fn][f_id_0] += f_value_0
+                    else:
+                        self.reprs[fn][f_id_0] = f_value_0
+            else:
+                self.reprs[fn] = fv0
+        self.num_docs += 1
+
 
 class Aggregator:
-  def __init__(self,  model: model.Model, thr):
-    self.clusters = []
-    self.model = model
-    self.thr = thr
-    
-  def PutDocument(self, document):
-    best_i = -1
-    best_s = 0.0
-    i = -1
-    for cluster in self.clusters:
-      i += 1
-      score = cosine_sim(document.reprs, cluster.reprs, self.model)
-      if score > best_s and score > self.thr:
-        best_s = score
-        best_i = i
-    
-    if best_i == -1:
-      self.clusters.append(Cluster(document.reprs))
-      best_i = len(self.clusters) - 1
-    else:
-      self.clusters[best_i].add_bof(document.reprs)
-    
-    return best_i
+    def __init__(self,  model: model.Model, thr):
+        self.clusters = []
+        self.model = model
+        self.thr = thr
+
+    def PutDocument(self, document):
+        best_i = -1
+        best_s = 0.0
+        i = -1
+        for cluster in self.clusters:
+            i += 1
+            score = cosine_sim_dc(document, cluster, self.model)
+            if score > best_s and score > self.thr:
+                best_s = score
+                best_i = i
+
+        if best_i == -1:
+            self.clusters.append(Cluster(document))
+            best_i = len(self.clusters) - 1
+        else:
+            self.clusters[best_i].add_document(document)
+
+        return best_i
