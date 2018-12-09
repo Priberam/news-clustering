@@ -16,10 +16,15 @@ import clustering
 import load_corpora
 
 corpus = load_corpora.load(r"E:\Corpora\clustering\processed_clusters\dataset.test.json",
-                           r"E:\Corpora\clustering\tok_ner_clusters\clustering.test.json", set(["spa"]))
+                           r"E:\Corpora\clustering\tok_ner_clusters\clustering.test.json", set(["deu"]))
 clustering_model = model.Model()
-clustering_model.load(r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_es\2_1492035151.291134_100.0.model',
-                      r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_es\example_2017-04-12T215308.030747.ii')
+
+#clustering_model.load(r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_es\2_1492035151.291134_100.0.model',
+#                      r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_es\example_2017-04-12T215308.030747.ii')
+
+clustering_model.load(r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_de\2_1499938269.299021_100.0.model',
+                      r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_de\example_2017-07-13T085725.498310.ii')
+
 aggregator = clustering.Aggregator(clustering_model, 8.18067)
 
 for i, d in enumerate(corpus.documents):

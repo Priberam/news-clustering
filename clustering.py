@@ -47,8 +47,10 @@ def cosine_sim_dc(d0, c1, model: model.Model):
         d0.timestamp.timestamp(), c1.newest_timestamp.timestamp(), numdays_stddev)
     bof["OLDEST_TS"] = timestamp_feature(
         d0.timestamp.timestamp(), c1.oldest_timestamp.timestamp(), numdays_stddev)
-    bof["NEWEST_TS"] = timestamp_feature(
+    bof["RELEVANCE_TS"] = timestamp_feature(
         d0.timestamp.timestamp(), c1.get_relevance_stamp(), numdays_stddev)
+    bof["ZZINVCLUSTER_SIZE"] = 1.0 / float(100 if c1.num_docs > 100 else c1.num_docs)
+
     return sparse_dotprod(bof, model.weights) - model.bias
 
 

@@ -20,6 +20,7 @@ class Model:
             ii = dict([(line.split('\t')[0], line.split('\t')[1].strip())
                        for line in fii])
 
+        print(json.dumps(ii))
         with open(model_path) as fm:
             for i, line in enumerate(fm):
                 if i == 10:
