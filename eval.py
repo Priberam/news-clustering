@@ -93,25 +93,9 @@ if not crosslingual:
 
   if debug_prints:
       print("ii built")
-    
-  #file_gold = files_gold[lang][set_id]
-  #clusters_gold = {}
-  #clusters_to_docs_gold = {}
-  #with open(file_gold) as fg:
-  #    for line in fg:
-  #        sl = line.split('\t')
-  #
-  #        if(fix_sizes):
-  #            if not sl[0] in clusters_pred:
-  #                continue
-  #
-  #        clusters_gold[sl[0]] = sl[1] 
-  #        if(not sl[1] in clusters_to_docs_gold):
-  #            clusters_to_docs_gold[sl[1]] = []
-  #        clusters_to_docs_gold[sl[1]].append(sl[0])
-        
+  
   if(len(clusters_gold) != len(clusters_pred)):
-      print ("ERROR!!!!!!!!!!!!!!!!!!!:", len(clusters_gold), len(clusters_pred))
+      print ("error:", len(clusters_gold), len(clusters_pred))
       for k0,v in clusters_gold.items():
           if k0 not in clusters_pred:
               print(k0)
@@ -121,13 +105,6 @@ if not crosslingual:
               print(k0)
 
       assert(False)
-      #print ("Bypassing...")
-      #for k,v in clusters_gold.items():
-      #    if k not in clusters_pred:
-      #        clusters_pred[k] = v
-      #for k,v in clusters_pred.items():
-      #    if k not in clusters_gold:
-      #        clusters_gold[k] = v
 
   true_labels = [0 for i in range(len(clusters_gold))]
   for k, v in clusters_gold.items():
@@ -148,32 +125,6 @@ if not crosslingual:
       print("score set done.")   
 
 else:
-  #mono_files_gold = []
-  #for k0, v0 in files_gold.items():
-  #  mono_files_gold.append(v0[set_id])
-
-  # DEBUG: Used for debug purposes to replicate old method
-  #mono_files_gold = [
-  #r"E:\indexes\ACL2017\logging_experiments\keysfollow_dev_from_devgold\2017-02-04T122846.785677_IJAIR_EN_FOLLOWDEV_14268_1000",
-  #r"E:\indexes\ACL2017\logging_experiments\keysfollow_dev_from_devgold\2017-02-04T122846.785677_IJAIR_DE_FOLLOWDEV_2398_1000",
-  #r"E:\indexes\ACL2017\logging_experiments\keysfollow_dev_from_devgold\2017-02-04T122846.785677_IJAIR_ES_FOLLOWDEV_2425_1000"]
-
-  # Read crosslingual gold
-  #clusters_gold = {}
-  #clusters_to_docs_gold = {}
-  #with open(cross_gold) as fg:
-  #    for line in fg:
-  #        sl = line.split('\t')
-  #
-  #        if(fix_sizes):
-  #            if not sl[0] in clusters_pred:
-  #                continue
-  #
-  #        clusters_gold[sl[0]] = sl[1] 
-  #        if(not sl[1] in clusters_to_docs_gold):
-  #            clusters_to_docs_gold[sl[1]] = []
-  #        clusters_to_docs_gold[sl[1]].append(sl[0])
-
   cross_languages = set()
   for language in args.crosslingual:
     cross_languages.add(language_converter[language])
@@ -204,17 +155,6 @@ else:
         language_to_index[document["lang"]] = nindex
       nindex = language_to_index[document["lang"]]
       mono_doc_to_cluster_gold[nindex][document["id"]] = document["cluster"]
-
-  #print(mono_doc_to_cluster_gold)
-  
-  #i = -1
-  #for mf in mono_files_gold:
-  #    i += 1
-  #    with open(mf) as fp:
-  #        for line in fp:
-  #            sl = line.split('\t')
-  #            mono_doc_to_cluster_gold[i][sl[0]] = sl[1]
-  #              
     
   for cluster_id, doc_list in clusters_to_docs_gold.items():
       gold_cross_cluster = set()
@@ -401,8 +341,8 @@ else:
 
     #print ("Visited documents: ",len(visited_documents))
     #print ("dataset documents: ",len(linking_dataset["ii"]))
-    #print("REMOVE DEBUG", len(visited_pairs) / 2)
-    #print("REMOVE DEBUG", len(predicted_links_map))
+    #print("DEBUG", len(visited_pairs) / 2)
+    #print("DEBUG", len(predicted_links_map))
     visited_data = set()
     for bag_t, bag_list in predicted_links_map.items():
         for bag_o in bag_list:
