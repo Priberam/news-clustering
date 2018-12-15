@@ -39,8 +39,7 @@ def normalized_gaussian(mean, stddev, x):
 def timestamp_feature(tsi, tst, gstddev):
   return normalized_gaussian(0, gstddev, (tsi-tst)/(60*60*24.0))
 
-
-def cosine_sim_dc(d0, c1, model: model.Model):
+def sim_bof_dc(d0, c1):
     numdays_stddev = 3.0
     bof = cosine_bof(d0.reprs, c1.reprs)
     bof["NEWEST_TS"] = timestamp_feature(
@@ -51,6 +50,9 @@ def cosine_sim_dc(d0, c1, model: model.Model):
         d0.timestamp.timestamp(), c1.get_relevance_stamp(), numdays_stddev)
     bof["ZZINVCLUSTER_SIZE"] = 1.0 / float(100 if c1.num_docs > 100 else c1.num_docs)
 
+    return bof
+
+def model_score(bof, model: model.Model):
     return sparse_dotprod(bof, model.weights) - model.bias
 
 
@@ -108,21 +110,32 @@ class Cluster:
 
 
 class Aggregator:
-    def __init__(self,  model: model.Model, thr):
+    def __init__(self,  model: model.Model, thr, merge_model: model.Model = None):
         self.clusters = []
         self.model = model
         self.thr = thr
+        self.merge_model = merge_model
 
     def PutDocument(self, document):
         best_i = -1
         best_s = 0.0
         i = -1
+        bofs = []
         for cluster in self.clusters:
             i += 1
-            score = cosine_sim_dc(document, cluster, self.model)
-            if score > best_s and score > self.thr:
+
+            bof = sim_bof_dc(document, cluster)
+            bofs.append(bof)
+            score = model_score(bof, self.model)
+            if score > best_s and (score > self.thr or self.merge_model):
                 best_s = score
                 best_i = i
+
+        if best_i != -1 and self.merge_model:
+            merge_score = model_score(bofs[best_i], self.merge_model) 
+            print(merge_score)
+            if merge_score <= 0:
+                best_i = -1
 
         if best_i == -1:
             self.clusters.append(Cluster(document))

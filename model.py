@@ -32,3 +32,17 @@ class Model:
                         self.weights[ii[f.split(':')[0]]] = float(
                             f.split(':')[1])
         print(json.dumps(self.weights))
+
+    def load_raw(self, model_path):
+        linei = -1
+        with open(model_path) as fii:
+            for line in fii:
+                linei += 1
+                if linei == 0:
+                    self.bias = float(line)
+                else:
+                    parts = line.split('\t')
+                    self.weights[parts[0]] = float(parts[1])
+            
+        print(json.dumps(self.weights))
+

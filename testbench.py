@@ -18,6 +18,7 @@ import load_corpora
 corpus = load_corpora.load(r"E:\Corpora\clustering\processed_clusters\dataset.test.json",
                            r"E:\Corpora\clustering\tok_ner_clusters\clustering.test.json", set(["eng"]))
 clustering_model = model.Model()
+merge_model = model.Model()
 
 #clustering_model.load(r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_es\2_1492035151.291134_100.0.model',
 #                      r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_es\example_2017-04-12T215308.030747.ii')
@@ -27,8 +28,9 @@ clustering_model = model.Model()
 
 clustering_model.load(r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_en\4_1491902620.876421_10000.0.model',
                       r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_en\example_2017-04-10T193850.536289.ii')
+merge_model.load_raw(r'E:\Projects\IndexerLib\ClusteringLib\models\aaai18_best_en\md_3')
 
-aggregator = clustering.Aggregator(clustering_model, 8.18067)
+aggregator = clustering.Aggregator(clustering_model, 8.18067, merge_model)
 
 for i, d in enumerate(corpus.documents):
     print(i, "/", len(corpus.documents), " | #c= ", len(aggregator.clusters))
