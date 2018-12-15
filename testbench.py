@@ -19,7 +19,8 @@ import os
 
 def test(lang, thr, model_path, model_path_ii, merge_model_path=None):
     corpus = load_corpora.load(r"dataset/dataset.test.json",
-                               r"dataset/clustering.test.json", set(lang))
+                               r"dataset/clustering.test.json", set([lang]))
+    print(lang,"#docs",len(corpus.documents))
     clustering_model = model.Model()
     clustering_model.load(model_path, model_path_ii)
 
@@ -31,8 +32,8 @@ def test(lang, thr, model_path, model_path_ii, merge_model_path=None):
     aggregator = clustering.Aggregator(clustering_model, thr, merge_model)
 
     for i, d in enumerate(corpus.documents):
-        print(i, "/", len(corpus.documents),
-              " | #c= ", len(aggregator.clusters))
+        print("\r", i, "/", len(corpus.documents),
+              " | #c= ", len(aggregator.clusters), end="")
         aggregator.PutDocument(clustering.Document(d, "???"))
 
     with open("clustering."+lang+".out", "w") as fo:
@@ -51,5 +52,5 @@ test('eng', 0.0, r'models/en/4_1491902620.876421_10000.0.model',
 test('spa', 8.18067, r'models/es/2_1492035151.291134_100.0.model',
      r'models/es/example_2017-04-12T215308.030747.ii')
 
-test('deu', 8.1175, r'de/2_1499938269.299021_100.0.model',
+test('deu', 8.1175, r'models/de/2_1499938269.299021_100.0.model',
      r'models/de/example_2017-07-13T085725.498310.ii')

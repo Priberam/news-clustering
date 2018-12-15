@@ -1,4 +1,4 @@
-# The 3-Clause BSD License
+#The 3-Clause BSD License
 # For Priberam Clustering Software
 # Copyright 2018 by PRIBERAM INFORMÁTICA, S.A. ("PRIBERAM") (www.priberam.com)
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -133,7 +133,7 @@ class Aggregator:
 
         if best_i != -1 and self.merge_model:
             merge_score = model_score(bofs[best_i], self.merge_model) 
-            print(merge_score)
+            i#print(merge_score)
             if merge_score <= 0:
                 best_i = -1
 
