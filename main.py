@@ -14,9 +14,6 @@ import subprocess
 import json
 import os
 import time
-import clustering
-
-aggregator = clustering.Aggregator()
 
 bs_s = 0.0
 bc_s = 2.35400649578408

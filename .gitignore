@@ -1,2 +1,5 @@
 __pycache__
-clustering.out
+dataset
+clustering.eng.out
+clustering.spa.out
+clustering.deu.out
