@@ -133,7 +133,7 @@ class Aggregator:
 
         if best_i != -1 and self.merge_model:
             merge_score = model_score(bofs[best_i], self.merge_model) 
-            i#print(merge_score)
+            #print(merge_score)
             if merge_score <= 0:
                 best_i = -1
 
