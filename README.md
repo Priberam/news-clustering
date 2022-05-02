@@ -1,5 +1,7 @@
 # news-clustering
 
+⚠️Note: This work has been superseded by https://github.com/Priberam/projected-news-clustering
+
 run download_data.sh to download dataset
 run run.sh to execute and print scores
 
